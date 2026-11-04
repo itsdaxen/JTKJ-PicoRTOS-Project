@@ -34,32 +34,33 @@ static void btn_fxn(uint gpio, uint32_t eventMask) {
 
 static void sensor_task(void *arg) {
   (void)arg;
-  // Tehtävä 2: Alusta valoisuusanturi. Etsi SDK-dokumentaatiosta sopiva
-  // funktio. Exercise 2: Init the light sensor. Find in the SDK documentation
-  // the adequate function.
 
-  for (;;) {
+  float ax, ay, az;
+  float gx, gy, gz, t;
 
-    // Tehtävä 2: Muokkaa tästä eteenpäin sovelluskoodilla. Kommentoi seuraava
-    // rivi.
-    //
-    // Exercise 2: Modify with application code here. Comment following line.
-    //             Read sensor data and print it out as string;
-    tight_loop_contents();
+  // Setting up the sensor.
+  if (init_ICM42670() == 0) {
+    printf("ICM-42670P initialized successfully!\n");
+    if (ICM42670_start_with_default_values() != 0) {
+      printf("ICM-42670P could not initialize accelerometer or gyroscope\n");
+      vTaskDelete(NULL);
+    }
+  } else {
+    printf("Failed to initialize ICM-42670P.\n");
+    vTaskDelete(NULL);
+  }
 
-    // Tehtävä 3:  Muokkaa aiemmin Tehtävässä 2 tehtyä koodia ylempänä.
-    //             Jos olet oikeassa tilassa, tallenna anturin arvo tulostamisen
-    //             sijaan globaaliin muuttujaan. Sen jälkeen muuta tilaa.
-    // Exercise 3: Modify previous code done for Exercise 2, in previous lines.
-    //             If you are in adequate state, instead of printing save the
-    //             sensor value into the global variable. After that, modify
-    //             state
+  // Start collection data here. Infinite loop.
+  while (1) {
+    if (ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0) {
 
-    // Exercise 2. Just for sanity check. Please, comment this out
-    // Tehtävä 2: Just for sanity check. Please, comment this out
-    printf("sensorTask\n");
+      printf(
+          "Accel: X=%f, Y=%f, Z=%f | Gyro: X=%f, Y=%f, Z=%f| Temp: %2.2f°C\n",
+          ax, ay, az, gx, gy, gz, t);
 
-    // Do not remove this
+    } else {
+      printf("Failed to read imu data\n");
+    }
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
