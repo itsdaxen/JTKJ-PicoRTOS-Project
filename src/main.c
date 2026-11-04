@@ -1,4 +1,5 @@
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -32,6 +33,8 @@ static void btn_fxn(uint gpio, uint32_t eventMask) {
   // SDK.
 }
 
+typedef enum { ORIENT_UNKNOWN, ORIENT_DOT, ORIENT_DASH } Orientation;
+
 static void sensor_task(void *arg) {
   (void)arg;
 
@@ -57,6 +60,37 @@ static void sensor_task(void *arg) {
       printf(
           "Accel: X=%f, Y=%f, Z=%f | Gyro: X=%f, Y=%f, Z=%f| Temp: %2.2f°C\n",
           ax, ay, az, gx, gy, gz, t);
+
+      // Calculate total acceleration magnitude
+      float magnitude = sqrtf(ax * ax + ay * ay + az * az);
+
+      // In a stable state g is close to 1
+      if (magnitude >= 0.75f && magnitude <= 1.25f) {
+        float z_share = fabsf(az) / magnitude;
+
+        Orientation orientation = ORIENT_UNKNOWN;
+
+        if (z_share >= 0.75f) {
+          orientation = ORIENT_DOT;
+        } else if (z_share <= 0.65f) {
+          orientation = ORIENT_DASH;
+        }
+
+        switch (orientation) {
+        case ORIENT_DOT:
+          printf("DOT\n");
+          break;
+        case ORIENT_DASH:
+          printf("DASH\n");
+          break;
+        case ORIENT_UNKNOWN:
+          printf("UNKNOWN\n");
+          break;
+        }
+
+      } else {
+        printf("Orientation unknown: acceleration outside accepted range\n");
+      }
 
     } else {
       printf("Failed to read imu data\n");
