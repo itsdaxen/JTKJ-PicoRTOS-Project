@@ -53,14 +53,14 @@ static void sensor_task(void *arg) {
     vTaskDelete(NULL);
   }
 
+  bool btn1_was_pressed = false;
+
   // Start collection data here. Infinite loop.
   while (1) {
+    Orientation orientation = ORIENT_UNKNOWN;
+    bool btn1_pressed = gpio_get(BUTTON1);
+
     if (ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0) {
-
-      printf(
-          "Accel: X=%f, Y=%f, Z=%f | Gyro: X=%f, Y=%f, Z=%f| Temp: %2.2f°C\n",
-          ax, ay, az, gx, gy, gz, t);
-
       // Calculate total acceleration magnitude
       float magnitude = sqrtf(ax * ax + ay * ay + az * az);
 
@@ -68,24 +68,10 @@ static void sensor_task(void *arg) {
       if (magnitude >= 0.75f && magnitude <= 1.25f) {
         float z_share = fabsf(az) / magnitude;
 
-        Orientation orientation = ORIENT_UNKNOWN;
-
         if (z_share >= 0.75f) {
           orientation = ORIENT_DOT;
         } else if (z_share <= 0.65f) {
           orientation = ORIENT_DASH;
-        }
-
-        switch (orientation) {
-        case ORIENT_DOT:
-          printf("DOT\n");
-          break;
-        case ORIENT_DASH:
-          printf("DASH\n");
-          break;
-        case ORIENT_UNKNOWN:
-          printf("UNKNOWN\n");
-          break;
         }
 
       } else {
@@ -95,7 +81,18 @@ static void sensor_task(void *arg) {
     } else {
       printf("Failed to read imu data\n");
     }
-    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    // Symbol handling here
+    char symbol = orientation == ORIENT_DOT    ? '.'
+                  : orientation == ORIENT_DASH ? '-'
+                                               : '\0';
+
+    if (btn1_pressed && !btn1_was_pressed && symbol) {
+      printf("%c\n", symbol);
+    }
+    btn1_was_pressed = btn1_pressed;
+
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
 
@@ -184,11 +181,7 @@ int main() {
   init_hat_sdk();
   sleep_ms(300); // Wait some time so initialization of USB and hat is done.
 
-  // Exercise 1: Initialize the button and the led and define an register the
-  // corresponding interrupton.
-  //             Interruption handler is defined up as btn_fxn
-  // Tehtävä 1:  Alusta painike ja LEd ja rekisteröi vastaava keskeytys.
-  //             Keskeytyskäsittelijä on määritelty yläpuolella nimellä btn_fxn
+  init_button1();
 
   TaskHandle_t hSensorTask, hPrintTask, hUSB = NULL;
 
