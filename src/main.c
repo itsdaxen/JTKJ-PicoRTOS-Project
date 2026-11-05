@@ -57,11 +57,13 @@ static void sensor_task(void *arg) {
   }
 
   bool btn1_was_pressed = false;
+  bool btn2_was_pressed = false;
 
   // Start collection data here. Infinite loop.
   while (1) {
     Orientation orientation = ORIENT_UNKNOWN;
     bool btn1_pressed = gpio_get(BUTTON1);
+    bool btn2_pressed = gpio_get(BUTTON2);
 
     if (ICM42670_read_sensor_data(&ax, &ay, &az, &gx, &gy, &gz, &t) == 0) {
       // Calculate total acceleration magnitude
@@ -104,7 +106,22 @@ static void sensor_task(void *arg) {
       }
     }
 
+    if (btn2_pressed && !btn2_was_pressed) {
+
+      if (message_len >= sizeof message - 1) // check we don't exceed the cap
+      {
+        printf("Message: %s | Max length reached!\n", message);
+
+      } else {
+        message[message_len] = ' ';
+        message_len++;
+        message[message_len] = '\0';
+        printf("Message: %s\n", message);
+      }
+    }
+
     btn1_was_pressed = btn1_pressed;
+    btn2_was_pressed = btn2_pressed;
 
     vTaskDelay(pdMS_TO_TICKS(10));
   }
@@ -196,6 +213,7 @@ int main() {
   sleep_ms(300); // Wait some time so initialization of USB and hat is done.
 
   init_button1();
+  init_button2();
 
   TaskHandle_t hSensorTask, hPrintTask, hUSB = NULL;
 
