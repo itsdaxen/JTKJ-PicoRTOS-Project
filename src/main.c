@@ -41,6 +41,9 @@ static void sensor_task(void *arg) {
   float ax, ay, az;
   float gx, gy, gz, t;
 
+  char message[10] = "";
+  size_t message_len = 0;
+
   // Setting up the sensor.
   if (init_ICM42670() == 0) {
     printf("ICM-42670P initialized successfully!\n");
@@ -88,8 +91,19 @@ static void sensor_task(void *arg) {
                                                : '\0';
 
     if (btn1_pressed && !btn1_was_pressed && symbol) {
-      printf("%c\n", symbol);
+
+      if (message_len >= sizeof message - 1) // check we don't exceed the cap
+      {
+        printf("Message: %s | Max length reached!\n", message);
+
+      } else {
+        message[message_len] = symbol;
+        message_len++;
+        message[message_len] = '\0';
+        printf("Message: %s\n", message);
+      }
     }
+
     btn1_was_pressed = btn1_pressed;
 
     vTaskDelay(pdMS_TO_TICKS(10));
