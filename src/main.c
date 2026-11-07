@@ -58,6 +58,8 @@ static void sensor_task(void *arg) {
 
   bool btn1_was_pressed = false;
   bool btn2_was_pressed = false;
+  bool message_confirmed = false;
+  TickType_t btn2_pressed_at = 0;
 
   // Start collection data here. Infinite loop.
   while (1) {
@@ -106,12 +108,26 @@ static void sensor_task(void *arg) {
       }
     }
 
-    if (btn2_pressed && !btn2_was_pressed) {
-
+    if (btn2_pressed) {
+      // On a new press record time and reset confirmed flag
+      if (!btn2_was_pressed) {
+        btn2_pressed_at = xTaskGetTickCount();
+        message_confirmed = false;
+      }
+      // After 200ms hold confirm and clear draft
+      if (!message_confirmed &&
+          (xTaskGetTickCount() - btn2_pressed_at >= pdMS_TO_TICKS(200))) {
+        printf("%s  \n", message);
+        printf("Message sent \n");
+        message_confirmed = true;
+        message[0] = '\0';
+        message_len = 0;
+      }
+    } // On release, add a space if hold didn't fire
+    else if (btn2_was_pressed && !message_confirmed) {
       if (message_len >= sizeof message - 1) // check we don't exceed the cap
       {
         printf("Message: %s | Max length reached!\n", message);
-
       } else {
         message[message_len] = ' ';
         message_len++;
