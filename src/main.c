@@ -65,7 +65,10 @@ static void sensor_task(void *arg) {
 
   bool btn1_was_pressed = false;
   bool btn2_was_pressed = false;
+  bool backspace_done = false;
   bool message_confirmed = false;
+
+  TickType_t btn1_pressed_at = 0;
   TickType_t btn2_pressed_at = 0;
   TickType_t tapped_at = 0;
 
@@ -140,18 +143,37 @@ static void sensor_task(void *arg) {
                   : orientation == ORIENT_DASH ? '-'
                                                : '\0';
 
-    if (btn1_pressed && !btn1_was_pressed && symbol) {
-
-      if (message_len >= sizeof message - 1) // check we don't exceed the cap
-      {
-        printf("Message: %s | Max length reached!\n", message);
-
-      } else {
-        message[message_len] = symbol;
-        message_len++;
-        message[message_len] = '\0';
-        printf("Message: %s\n", message);
+    if (btn1_pressed) {
+      // On a new press record time
+      if (!btn1_was_pressed) {
+        btn1_pressed_at = xTaskGetTickCount();
       }
+      // After 200ms hold backspace
+      if ((xTaskGetTickCount() - btn1_pressed_at >= pdMS_TO_TICKS(200)) &&
+          !backspace_done) {
+        backspace_done = true;
+
+        if (message_len > 0) {
+          message[message_len - 1] = '\0';
+          message_len--;
+          printf("Message: %s\n", message);
+        }
+      }
+    } // On release, confirm symbol if hold didn't fire
+    else if (btn1_was_pressed) {
+      if (!backspace_done && symbol) {
+        if (message_len >= sizeof message - 1) // check we don't exceed the cap
+        {
+          printf("Message: %s | Max length reached!\n", message);
+
+        } else {
+          message[message_len] = symbol;
+          message_len++;
+          message[message_len] = '\0';
+          printf("Message: %s\n", message);
+        }
+      }
+      backspace_done = false;
     }
 
     if (btn2_pressed) {
