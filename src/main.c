@@ -35,6 +35,7 @@ static void btn_fxn(uint gpio, uint32_t eventMask) {
 
 typedef enum { ORIENT_UNKNOWN, ORIENT_DOT, ORIENT_DASH } Orientation;
 typedef enum { NO_TAP, DOUBLE_TAP, TRIPLE_TAP } TapType;
+typedef enum { TILT_MODE, TAP_MODE } InputMode;
 
 static void sensor_task(void *arg) {
   (void)arg;
@@ -72,10 +73,11 @@ static void sensor_task(void *arg) {
   TickType_t btn2_pressed_at = 0;
   TickType_t tapped_at = 0;
 
+  InputMode input_mode = TILT_MODE;
+
   // Start collection data here. Infinite loop.
   while (1) {
     Orientation orientation = ORIENT_UNKNOWN;
-    TapType tapType = NO_TAP;
 
     bool btn1_pressed = gpio_get(BUTTON1);
     bool btn2_pressed = gpio_get(BUTTON2);
@@ -84,55 +86,61 @@ static void sensor_task(void *arg) {
       // Calculate total acceleration magnitude
       float magnitude = sqrtf(ax * ax + ay * ay + az * az);
 
-      // In a stable state g is close to 1
-      if (magnitude >= 0.75f && magnitude <= 1.25f) {
-        float z_share = fabsf(az) / magnitude;
+      if (input_mode == TILT_MODE) {
+        // In a stable state g is close to 1
+        if (magnitude >= 0.75f && magnitude <= 1.25f) {
+          float z_share = fabsf(az) / magnitude;
 
-        if (z_share >= 0.75f) {
-          orientation = ORIENT_DOT;
-        } else if (z_share <= 0.65f) {
-          orientation = ORIENT_DASH;
-        }
-      }
-
-      // Read taps:
-      TickType_t now = xTaskGetTickCount();
-      TickType_t elapsed = now - tapped_at;
-
-      // Wait 100ms to see if no other tap is coming
-      if ((elapsed >= pdMS_TO_TICKS(100)) && tap > 0) {
-        tapType = tap == 2 ? DOUBLE_TAP : tap == 3 ? TRIPLE_TAP : NO_TAP;
-
-        char symbol = tapType == DOUBLE_TAP   ? '-'
-                      : tapType == TRIPLE_TAP ? '.'
-                                              : '\0';
-        if (tapType) {
-          if (message_len >=
-              sizeof message - 1) // check we don't exceed the cap
-          {
-            printf("Message: %s | Max length reached!\n", message);
-          } else {
-            message[message_len] = symbol;
-            message_len++;
-            message[message_len] = '\0';
-            printf("Message: %s\n", message);
+          if (z_share >= 0.75f) {
+            orientation = ORIENT_DOT;
+          } else if (z_share <= 0.65f) {
+            orientation = ORIENT_DASH;
           }
         }
-
-        tap = 0;
-      }
-      // Allow news taps only if interval between them is more than 50ms
-      if (elapsed >= pdMS_TO_TICKS(50)) {
-        was_tapped = false;
-      }
-      if ((magnitude >= saved_magnitude * 1.1) && !was_tapped && !first_run) {
-        tapped_at = now;
-        was_tapped = true;
-        tap++;
       }
 
-      saved_magnitude = magnitude;
-      first_run = false;
+      if (input_mode == TAP_MODE) {
+        TapType tapType = NO_TAP;
+
+        // Read taps:
+        TickType_t now = xTaskGetTickCount();
+        TickType_t elapsed = now - tapped_at;
+
+        // Wait 100ms to see if no other tap is coming
+        if ((elapsed >= pdMS_TO_TICKS(100)) && tap > 0) {
+          tapType = tap == 2 ? DOUBLE_TAP : tap == 3 ? TRIPLE_TAP : NO_TAP;
+
+          char symbol = tapType == DOUBLE_TAP   ? '-'
+                        : tapType == TRIPLE_TAP ? '.'
+                                                : '\0';
+          if (tapType) {
+            if (message_len >=
+                sizeof message - 1) // check we don't exceed the cap
+            {
+              printf("Message: %s | Max length reached!\n", message);
+            } else {
+              message[message_len] = symbol;
+              message_len++;
+              message[message_len] = '\0';
+              printf("Message: %s\n", message);
+            }
+          }
+
+          tap = 0;
+        }
+        // Allow news taps only if interval between them is more than 50ms
+        if (elapsed >= pdMS_TO_TICKS(50)) {
+          was_tapped = false;
+        }
+        if ((magnitude >= saved_magnitude * 1.1) && !was_tapped && !first_run) {
+          tapped_at = now;
+          was_tapped = true;
+          tap++;
+        }
+
+        saved_magnitude = magnitude;
+        first_run = false;
+      }
 
     } else {
       printf("Failed to read imu data\n");
