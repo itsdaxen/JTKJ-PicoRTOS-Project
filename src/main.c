@@ -17,7 +17,7 @@ typedef enum { NO_TAP, DOUBLE_TAP, TRIPLE_TAP } TapType;
 typedef enum { TILT_MODE, TAP_MODE, INACTIVE } InputMode;
 typedef enum { TILT, TAP, LAST_MESSAGE } MenuSelection;
 
-static void sensor_task(void *arg) {
+static void input_task(void *arg) {
   (void)arg;
 
   float ax, ay, az;
@@ -284,14 +284,14 @@ int main() {
   init_button1();
   init_button2();
 
-  TaskHandle_t hSensorTask = NULL;
+  TaskHandle_t hInputTask = NULL;
 
   // Create the tasks with xTaskCreate
-  BaseType_t result = xTaskCreate(sensor_task, "sensor", DEFAULT_STACK_SIZE, NULL,
-                                  2, &hSensorTask);
+  BaseType_t result = xTaskCreate(input_task, "input", DEFAULT_STACK_SIZE, NULL,
+                                  2, &hInputTask);
 
   if (result != pdPASS) {
-    printf("Sensor task creation failed\n");
+    printf("Input task creation failed\n");
     return 0;
   }
 
