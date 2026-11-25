@@ -176,8 +176,8 @@ static void sensor_task(void *arg) {
           TickType_t now = xTaskGetTickCount();
           TickType_t elapsed = now - tapped_at;
 
-          // Wait 100ms to see if no other tap is coming
-          if ((elapsed >= pdMS_TO_TICKS(100)) && tap > 0) {
+          // Wait 1210ms to see if no other tap is coming
+          if ((elapsed >= pdMS_TO_TICKS(1210)) && tap > 0) {
             tapType = tap == 2 ? DOUBLE_TAP : tap == 3 ? TRIPLE_TAP : NO_TAP;
 
             char symbol = tapType == DOUBLE_TAP   ? '-'
@@ -198,11 +198,11 @@ static void sensor_task(void *arg) {
 
             tap = 0;
           }
-          // Allow news taps only if interval between them is more than 50ms
-          if (elapsed >= pdMS_TO_TICKS(50)) {
+          // Allow news taps only if interval between them is more than 400ms
+          if (elapsed >= pdMS_TO_TICKS(400)) {
             was_tapped = false;
           }
-          if ((magnitude >= saved_magnitude * 1.1) && !was_tapped &&
+          if ((magnitude >= saved_magnitude * 1.08) && !was_tapped &&
               !first_run) {
             tapped_at = now;
             was_tapped = true;
@@ -256,7 +256,6 @@ static void sensor_task(void *arg) {
           }
           backspace_done = false;
         }
-
 
         if (btn2_pressed) {
           // On a new press record time and reset confirmed flag
