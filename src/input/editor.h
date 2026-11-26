@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#define MESSAGE_CAPACITY 9
+#define MESSAGE_CAPACITY 120
 
 typedef struct {
   char text[MESSAGE_CAPACITY + 1];
