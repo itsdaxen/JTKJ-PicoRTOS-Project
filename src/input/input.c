@@ -91,6 +91,7 @@ void input_task(void *arg) {
           printf("%s  \n", editor.text);
           printf("Message sent \n");
           editor_clear(&editor);
+          taps.count = 0;
         } else if (event2 == BUTTON_SHORT_PRESS) {
           if (!editor_append(&editor, ' ')) {
             printf("Message: %s | Max length reached!\n", editor.text);
