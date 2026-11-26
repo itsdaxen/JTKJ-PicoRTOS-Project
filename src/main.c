@@ -1,4 +1,4 @@
-#include "input.h"
+#include "input/input.h"
 #include "tkjhat/sdk.h"
 #include <FreeRTOS.h>
 #include <stdio.h>
