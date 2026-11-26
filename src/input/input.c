@@ -61,16 +61,15 @@ void input_task(void *arg) {
               detect_tap_symbol(&taps, magnitude, xTaskGetTickCount());
           if (symbol) {
             if (!editor_append(&editor, symbol)) {
-              printf("Message: %s | Max length reached!\n", editor.text);
+              printf("__Message length limit reached__\n");
             } else {
-              printf("Message: %s\n", editor.text);
               display_text(editor.text);
             }
           }
         }
 
       } else {
-        printf("Failed to read imu data\n");
+        printf("__Failed to read imu data__\n");
       }
 
       if (ui.input_mode != INBOX_MODE) {
@@ -78,14 +77,12 @@ void input_task(void *arg) {
             detect_button_event(&button1, btn1_pressed, xTaskGetTickCount());
         if (event1 == BUTTON_HOLD) {
           if (editor_backspace(&editor)) {
-            printf("Message: %s\n", editor.text);
             display_text(editor.text);
           }
         } else if (event1 == BUTTON_SHORT_PRESS && tilt_symbol) {
           if (!editor_append(&editor, tilt_symbol)) {
-            printf("Message: %s | Max length reached!\n", editor.text);
+            printf("__Message length limit reached__\n");
           } else {
-            printf("Message: %s\n", editor.text);
             display_text(editor.text);
           }
         }
@@ -94,15 +91,13 @@ void input_task(void *arg) {
             detect_button_event(&button2, btn2_pressed, xTaskGetTickCount());
         if (event2 == BUTTON_HOLD) {
           printf("%s  \n", editor.text);
-          printf("Message sent \n");
           editor_clear(&editor);
           taps.count = 0;
-          display_text(editor.text);
+          display_text("Message sent");
         } else if (event2 == BUTTON_SHORT_PRESS) {
           if (!editor_append(&editor, ' ')) {
-            printf("Message: %s | Max length reached!\n", editor.text);
+            printf("__Message length limit reached__\n");
           } else {
-            printf("Message: %s\n", editor.text);
             display_text(editor.text);
           }
         }

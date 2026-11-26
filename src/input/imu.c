@@ -4,13 +4,12 @@
 
 bool initialize_imu(void) {
   if (init_ICM42670() == 0) {
-    printf("ICM-42670P initialized successfully!\n");
     if (ICM42670_start_with_default_values() != 0) {
-      printf("ICM-42670P could not initialize accelerometer or gyroscope\n");
+      printf("__ICM-42670P could not initialize accelerometer or gyroscope__\n");
       return false;
     }
   } else {
-    printf("Failed to initialize ICM-42670P.\n");
+    printf("__Failed to initialize ICM-42670P.__\n");
     return false;
   }
 

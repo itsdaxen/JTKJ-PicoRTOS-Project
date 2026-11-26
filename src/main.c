@@ -24,7 +24,7 @@ int main() {
                                   2, &hInputTask);
 
   if (result != pdPASS) {
-    printf("Input task creation failed\n");
+    printf("__Input task creation failed__\n");
     return 0;
   }
 
