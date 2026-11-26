@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "../display.h"
 #include <stdio.h>
 
 bool handle_ui(Ui *ui, bool btn1_pressed, bool btn2_pressed,
@@ -14,7 +15,7 @@ bool handle_ui(Ui *ui, bool btn1_pressed, bool btn2_pressed,
   case UI_MENU_REQUESTED:
     if (!btn1_pressed && !btn2_pressed) {
       ui->state = UI_MENU_ACTIVE;
-      print_menu(ui->menu_selection);
+      display_menu(ui->menu_selection);
     }
     break;
 
@@ -25,14 +26,14 @@ bool handle_ui(Ui *ui, bool btn1_pressed, bool btn2_pressed,
         if (ui->menu_selection > LAST_MESSAGE) {
           ui->menu_selection = TILT;
         }
-        print_menu(ui->menu_selection);
+        display_menu(ui->menu_selection);
       }
 
       if (btn2_pressed && !btn2_was_pressed) {
         ui->state = UI_MENU_SELECTION_CONFIRMED;
         ui->input_mode = ui->menu_selection == TAP    ? TAP_MODE
                          : ui->menu_selection == TILT ? TILT_MODE
-                                                      : INACTIVE;
+                                                      : INBOX_MODE;
 
         printf("Menu closed. You have selected: \n");
         printf(ui->menu_selection == TILT           ? "Tilt mode\n"

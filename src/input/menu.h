@@ -3,6 +3,4 @@
 
 typedef enum { TILT, TAP, LAST_MESSAGE } MenuSelection;
 
-void print_menu(MenuSelection selection);
-
 #endif

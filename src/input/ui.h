@@ -4,7 +4,7 @@
 #include "menu.h"
 #include <stdbool.h>
 
-typedef enum { TILT_MODE, TAP_MODE, INACTIVE } InputMode;
+typedef enum { TILT_MODE, TAP_MODE, INBOX_MODE } InputMode;
 typedef enum {
   UI_OUTSIDE_MENU,
   UI_MENU_REQUESTED,

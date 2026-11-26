@@ -1,4 +1,5 @@
 #include "input.h"
+#include "../display.h"
 #include "buttons.h"
 #include "editor.h"
 #include "imu.h"
@@ -38,6 +39,7 @@ void input_task(void *arg) {
     bool btn1_pressed = gpio_get(BUTTON1);
     bool btn2_pressed = gpio_get(BUTTON2);
 
+    UiState previous_ui_state = ui.state;
     if (!handle_ui(&ui, btn1_pressed, btn2_pressed, button1.was_pressed,
                    button2.was_pressed)) {
       taps.count = 0;
@@ -62,6 +64,7 @@ void input_task(void *arg) {
               printf("Message: %s | Max length reached!\n", editor.text);
             } else {
               printf("Message: %s\n", editor.text);
+              display_text(editor.text);
             }
           }
         }
@@ -70,18 +73,20 @@ void input_task(void *arg) {
         printf("Failed to read imu data\n");
       }
 
-      if (ui.input_mode != INACTIVE) {
+      if (ui.input_mode != INBOX_MODE) {
         ButtonEvent event1 =
             detect_button_event(&button1, btn1_pressed, xTaskGetTickCount());
         if (event1 == BUTTON_HOLD) {
           if (editor_backspace(&editor)) {
             printf("Message: %s\n", editor.text);
+            display_text(editor.text);
           }
         } else if (event1 == BUTTON_SHORT_PRESS && tilt_symbol) {
           if (!editor_append(&editor, tilt_symbol)) {
             printf("Message: %s | Max length reached!\n", editor.text);
           } else {
             printf("Message: %s\n", editor.text);
+            display_text(editor.text);
           }
         }
 
@@ -92,13 +97,24 @@ void input_task(void *arg) {
           printf("Message sent \n");
           editor_clear(&editor);
           taps.count = 0;
+          display_text(editor.text);
         } else if (event2 == BUTTON_SHORT_PRESS) {
           if (!editor_append(&editor, ' ')) {
             printf("Message: %s | Max length reached!\n", editor.text);
           } else {
             printf("Message: %s\n", editor.text);
+            display_text(editor.text);
           }
         }
+      }
+    }
+
+    if (previous_ui_state == UI_MENU_SELECTION_CONFIRMED &&
+        ui.state == UI_OUTSIDE_MENU) {
+      if (ui.input_mode == INBOX_MODE) {
+        display_text("Inbox not connected");
+      } else {
+        display_text(editor.text);
       }
     }
 

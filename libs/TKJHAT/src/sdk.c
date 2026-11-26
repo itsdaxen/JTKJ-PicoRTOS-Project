@@ -356,9 +356,6 @@ void write_text_xy(int16_t x0, int16_t y0, const char *text) {
 
     ssd1306_draw_string(&disp, (uint32_t)x0, (uint32_t)y0, scale, text);
     ssd1306_show(&disp);
-
-    // Delay for 800 milliseconds
-    sleep_ms(800);
 }
 
 void write_text(const char *text) {

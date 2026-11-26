@@ -112,12 +112,12 @@ add_subdirectory(examples/hello_serial_bidirectional_client)
 # If you add the headers in a different directory, you should use: target_include_directories
 add_executable(${MAIN_TARGET}
     src/main.c
+    src/display.c
     src/input/input.c
     src/input/imu.c
     src/input/editor.c
     src/input/tilt.c
     src/input/taps.c
-    src/input/menu.c
     src/input/buttons.c
     src/input/ui.c
 )

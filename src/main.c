@@ -15,6 +15,7 @@ int main() {
 
   init_button1();
   init_button2();
+  init_display();
 
   TaskHandle_t hInputTask = NULL;
 
