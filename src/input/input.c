@@ -13,6 +13,8 @@
 #include <task.h>
 
 #define INPUT_POLL_MS 10
+#define SEND_LED_MS 200
+#define SEND_LED_PULSES 3
 
 void input_task(void *arg) {
   (void)arg;
@@ -29,6 +31,9 @@ void input_task(void *arg) {
 
   ButtonState button1 = {0};
   ButtonState button2 = {0};
+  bool send_led_on = false;
+  int send_led_pulses = 0;
+  TickType_t send_led_at = 0;
   Ui ui = {.state = UI_OUTSIDE_MENU,
            .input_mode = TILT_MODE,
            .menu_selection = TILT};
@@ -91,6 +96,10 @@ void input_task(void *arg) {
             detect_button_event(&button2, btn2_pressed, xTaskGetTickCount());
         if (event2 == BUTTON_HOLD) {
           printf("%s  \n", editor.text);
+          set_led_status(true);
+          send_led_on = true;
+          send_led_pulses = SEND_LED_PULSES;
+          send_led_at = xTaskGetTickCount();
           editor_clear(&editor);
           taps.count = 0;
           display_text("Message sent");
@@ -110,6 +119,16 @@ void input_task(void *arg) {
         display_text("Inbox not connected");
       } else {
         display_text(editor.text);
+      }
+    }
+
+    if (send_led_pulses > 0 &&
+        xTaskGetTickCount() - send_led_at >= pdMS_TO_TICKS(SEND_LED_MS)) {
+      send_led_on = !send_led_on;
+      set_led_status(send_led_on);
+      send_led_at = xTaskGetTickCount();
+      if (!send_led_on) {
+        send_led_pulses--;
       }
     }
 
