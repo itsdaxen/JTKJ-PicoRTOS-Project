@@ -6,7 +6,7 @@
 #include "task.h"
 #include "queue.h"
 #include "frtos_task.h"
-static char message_buffer[MESSAGE_SIZE];
+static char message_receive[MESSAGE_SIZE];
 static int buffer_index = 0;
 static bool overflow = false;
 BaseType_t receive_message(QueueHandle_t message_queue) {
@@ -25,17 +25,17 @@ BaseType_t receive_message(QueueHandle_t message_queue) {
                     buffer_index = 0;
                     overflow = false;
                 }
-                else if (message_buffer[buffer_index - 1] != ' ' || message_buffer[buffer_index - 2] != ' ') {
+                else if (message_receive[buffer_index - 1] != ' ' || message_receive[buffer_index - 2] != ' ') {
                     // printf("__Incorrect message protocol!__\n");
                     buffer_index = 0;
                     overflow = false;
                 }
                 else {
                 buffer_index = buffer_index - 2;
-                message_buffer[buffer_index] = '\0';
+                message_receive[buffer_index] = '\0';
                 // printf("__Message received:__ %s\n", message_buffer);
                 // Send to queue so the receiver can pick it up from the queue
-                if (xQueueSend(message_queue, message_buffer, 0) != pdPASS) {
+                if (xQueueSend(message_queue, message_receive, 0) != pdPASS) {
                     // printf("__Queue is full! Message discarded.__\n");
                     buffer_index = 0;
                     overflow = false;
@@ -53,7 +53,7 @@ BaseType_t receive_message(QueueHandle_t message_queue) {
 
         }
         else if (buffer_index < MESSAGE_SIZE - 1) {
-            message_buffer[buffer_index] = (char)ch;
+            message_receive[buffer_index] = (char)ch;
             buffer_index++;
         }
         else {
